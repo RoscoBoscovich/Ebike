@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
 // hex values to send to BMS
 byte get_basic_info_message[] = {0xDD, 0xA5, 0x03, 0x00, 0xFF, 0xFD, 0x77};
 byte get_cell_voltage_message[] = {0xDD, 0xA5, 0x04, 0x00, 0xFF, 0xFC, 0x77};
@@ -32,9 +31,10 @@ const byte rxPin = 12;
 const byte txPin = 13;
 SoftwareSerial SerialBMS (rxPin, txPin);
 
-///////////////// functions  /////////////////
 
-/// split byte into two nibbles 
+/////////////////////// functions  ////////////////////////
+
+////// split byte into two nibbles 
 void split_byte(byte inByte)
 {
         nib1 = ((inByte >> 4) & 0x0F);
@@ -43,7 +43,7 @@ void split_byte(byte inByte)
         nib_array[1] = nib2;
 }
 
-// print nibble array to serial
+////// print nibble array to serial
 void print_array(byte nibs[], int nibnum)
 {
   for (i=0; i < nibnum; i++)
@@ -53,7 +53,7 @@ void print_array(byte nibs[], int nibnum)
 }
 
 
-/// print the nibbles hex values to serial
+////// print the nibbles hex values to serial
 void print_nib(byte nib_in)
 {
   switch (nib_in) {
@@ -112,7 +112,7 @@ void print_nib(byte nib_in)
 }
 
 
-/// get the data from the BMS 
+/////// get the data from the BMS 
 byte * get_data(byte hex_array[], int ind)
 {
 checksum = 0;
@@ -135,7 +135,7 @@ while ((current_time - start_time) < transfer_time){
 return *hex_array, index = ind;
 }
 
-/// display received data to serial port
+/////// display received data to serial port
 void display_basic_info(byte hex_array[],int index)
 { 
   index--;
@@ -144,6 +144,9 @@ void display_basic_info(byte hex_array[],int index)
   
   if ((int)checksum_in == (int)checksum)
   {    
+//      Serial.write("\n\rPassed Basic");
+  
+    
       float voltage = (float)(16*16*16*(int)hex_array[8] + 16*16*(int)hex_array[9] + 16*(int)hex_array[10] + (int)hex_array[11])/100;
       float current = (float)(16*16*16*(int)hex_array[12] + 16*16*(int)hex_array[13] + 16*(int)hex_array[14] + (int)hex_array[15])/1000;
       float residual_capacity = (float)(16*16*16*(int)hex_array[16] + 16*16*(int)hex_array[17] + 16*(int)hex_array[18] + (int)hex_array[19])/100;
@@ -153,8 +156,7 @@ void display_basic_info(byte hex_array[],int index)
       float temperature1 =  ((float)(16*16*16*(int)hex_array[54] + 16*16*(int)hex_array[55] + 16*(int)hex_array[56] + (int)hex_array[57]) - 2731)/10;
       float temperature2 =  ((float)(16*16*16*(int)hex_array[58] + 16*16*(int)hex_array[59] + 16*(int)hex_array[60] + (int)hex_array[61]) - 2731)/10;
       int state_of_charge = 16*(int)hex_array[46] + (int)hex_array[47];
-      
-      
+          
       Serial.write("\n\rVoltage = ");
       Serial.print(voltage);
       Serial.write("V");
@@ -190,7 +192,7 @@ void display_basic_info(byte hex_array[],int index)
       Serial.write("\n\rTemperature 2 = ");
       Serial.print(temperature2);
       Serial.write("C\r\n\r\n"); 
-      
+
       
 //      Serial.write("\n\rIndex = ");
 //      Serial.print(index);
@@ -214,18 +216,22 @@ void display_basic_info(byte hex_array[],int index)
 //      *nib_array = short_to_byte_array(checksum_in);
 //      print_array(nib_array, 4);
 //      Serial.write("\n\r\n\r"); 
+}else{
+  Serial.print("failed basic");
 }
 }
 
-/// display received data to serial port
+/////// display received data to serial port
 void display_voltage_info(byte hex_array[],int index)
 { 
   index--;
   short int checksum_in = ~(((short)(16*16*16*(int)hex_array[index-5] + 16*16*(int)hex_array[index-4] + 16*(int)hex_array[index-3] + (int)hex_array[index-2]) - 1) | 0xFF);
-  checksum = checksum - 0xDD - 0x03 - 0x1B - 0xFB - 0x6F - 0x77 - 0xA5 + (index - 7) ;
+  checksum = checksum - 0xDD - 0x03 - 0x1B - 0xFB - 0x6F - 0x77 - 0xA5 + (index - 8) ;
 
   if ((int)checksum_in == (int)checksum)
   {    
+//      Serial.write("\n\rPassed Voltage");
+      
       float voltage1 = (float)(16*16*16*(int)hex_array[8] + 16*16*(int)hex_array[9] + 16*(int)hex_array[10] + (int)hex_array[11])/1000;
       float voltage2 = (float)(16*16*16*(int)hex_array[12] + 16*16*(int)hex_array[13] + 16*(int)hex_array[14] + (int)hex_array[15])/1000;
       float voltage3 = (float)(16*16*16*(int)hex_array[16] + 16*16*(int)hex_array[17] + 16*(int)hex_array[18] + (int)hex_array[19])/1000;
@@ -239,41 +245,39 @@ void display_voltage_info(byte hex_array[],int index)
       float voltage11 = (float)(16*16*16*(int)hex_array[48] + 16*16*(int)hex_array[49] + 16*(int)hex_array[50] + (int)hex_array[11])/1000;
       float voltage12 = (float)(16*16*16*(int)hex_array[52] + 16*16*(int)hex_array[53] + 16*(int)hex_array[54] + (int)hex_array[55])/1000;
 
-
-    
-      Serial.write("\n\rVoltage 1 = ");git
+      Serial.write("\n\rVoltage 1  = ");
       Serial.print(voltage1,3);
       Serial.write("V");
 
-      Serial.write("\n\rVoltage 2 = ");
+      Serial.write("\n\rVoltage 2  = ");
       Serial.print(voltage2,3);
       Serial.write("V");
 
-      Serial.write("\n\rVoltage 3 = ");
+      Serial.write("\n\rVoltage 3  = ");
       Serial.print(voltage3,3);
       Serial.write("V");
 
-      Serial.write("\n\rVoltage 4 = ");
+      Serial.write("\n\rVoltage 4  = ");
       Serial.print(voltage4,3);
       Serial.write("V");
 
-      Serial.write("\n\rVoltage 5 = ");
+      Serial.write("\n\rVoltage 5  = ");
       Serial.print(voltage5,3);
       Serial.write("V");
 
-      Serial.write("\n\rVoltage 6 = ");
+      Serial.write("\n\rVoltage 6  = ");
       Serial.print(voltage6,3);
       Serial.write("V");
 
-      Serial.write("\n\rVoltage 7 = ");
+      Serial.write("\n\rVoltage 7  = ");
       Serial.print(voltage7,3);
       Serial.write("V");
 
-      Serial.write("\n\rVoltage 8 = ");
+      Serial.write("\n\rVoltage 8  = ");
       Serial.print(voltage8,3);
       Serial.write("V");
 
-      Serial.write("\n\rVoltage 9 = ");
+      Serial.write("\n\rVoltage 9  = ");
       Serial.print(voltage9,3);
       Serial.write("V");
 
@@ -285,7 +289,7 @@ void display_voltage_info(byte hex_array[],int index)
       Serial.print(voltage11,3);
       Serial.write("V");
       
-       Serial.write("\n\rVoltage 12 = ");
+      Serial.write("\n\rVoltage 12 = ");
       Serial.print(voltage12,3);
       Serial.write("V\r\n\r\n");
 
@@ -302,22 +306,24 @@ void display_voltage_info(byte hex_array[],int index)
 //      print_nib(nib_array[2]);
 //      print_nib(nib_array[3]);
 //      
-//////   print_array(nib_array, 4);
-//////      Serial.write(""); 
-////      
+//      print_array(nib_array, 4);
+//      Serial.write(""); 
+//      
 //      Serial.write("\n\rChecksum in = ");
-////      Serial.print(checksum_in);
-////      Serial.write(", "); 
+//      Serial.print(checksum_in);
+//      Serial.write(", "); 
 //      *nib_array = short_to_byte_array(checksum_in);
 //      print_nib(nib_array[0]);
 //      print_nib(nib_array[1]);
 //      print_nib(nib_array[2]);
 //      print_nib(nib_array[3]);
 //      Serial.write("\n\r\n\r"); 
+  }else{
+  Serial.print("failed voltage");
 }
 }
 
-
+////// convert a short to an array of 4 nibs
 byte * short_to_byte_array(short checksum_received)
 {
    byte nibL1 = ((checksum_received >> 12) & 0x0F);
@@ -331,31 +337,28 @@ byte * short_to_byte_array(short checksum_received)
    return *nib_array;
 }
 
-
+////// calls the functions to get basic info
 void get_basic_info()
 {
-
   SerialBMS.write(get_basic_info_message, sizeof(get_basic_info_message));
   SerialBMS.flush();
   *hex_array = get_data(hex_array, index);
    display_basic_info(hex_array, index);
    index = 0;
-  
 }
 
+////// calls the functions to get cell voltages
 void get_voltage_info()
 {
-
   SerialBMS.write(get_cell_voltage_message, sizeof(get_cell_voltage_message));
   SerialBMS.flush();
   *hex_array = get_data(hex_array, index);
    display_voltage_info(hex_array, index);
    index = 0;
-  
 }
 
 
-
+//////////////////////// main ///////////////////////
 void setup() 
 {
  Serial.begin(9600);
